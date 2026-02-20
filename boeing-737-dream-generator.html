@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOVIEDREAMS Lab Simulator - Boeing 737 Dream Render</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000000;
+            color: #40e0d0;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 390px;
+            height: 100vh;
+            margin: 0 auto;
+            position: relative;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(10, 10, 10, 0.9);
+            border-bottom: 2px solid #40e0d0;
+            flex-shrink: 0;
+        }
+
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .logo {
+            font-size: 14px;
+            font-weight: bold;
+            color: #40e0d0;
+            text-shadow: 0 0 8px #40e0d0;
+        }
+
+        .corp {
+            font-size: 8px;
+            color: #ff8c00;
+            opacity: 0.9;
+        }
+
+        .model-badge {
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #40e0d0;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 7px;
+            color: #ff8c00;
+            text-align: center;
+            box-shadow: 0 0 8px rgba(64, 224, 208, 0.3);
+        }
+
+        .model-badge-label {
+            color: #40e0d0;
+            font-size: 6px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .patient-info {
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #40e0d0;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 9px;
+            text-align: center;
+        }
+
+        .patient-id {
+            color: #ff8c00;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .dream-theme {
+            color: #40e0d0;
+            font-size: 8px;
+        }
+
+        .viewer-3d {
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #40e0d0;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+            height: 200px;
+            box-shadow: 0 0 8px rgba(64, 224, 208, 0.3);
+        }
+
+        .viewer-3d canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .viewer-label {
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            font-size: 7px;
+            color: #ff8c00;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .viewer-stats {
+            position: absolute;
+            bottom: 4px;
+            right: 8px;
+            font-size: 6px;
+            color: #40e0d0;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 5px;
+            border-radius: 3px;
+            text-align: right;
+        }
+
+        .viewer-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: #40e0d0;
+            z-index: 10;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 6px #40e0d0;
+        }
+
+        .monitors-container {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .health-monitor {
+            flex: 0 0 120px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #40e0d0;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .health-title {
+            color: #40e0d0;
+            font-size: 8px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 1px solid #40e0d0;
+            padding-bottom: 3px;
+        }
+
+        .vital-sign {
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .vital-label {
+            color: #40e0d0;
+            font-size: 7px;
+        }
+
+        .vital-value {
+            color: #ff8c00;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .vital-critical {
+            color: #ff4444;
+        }
+
+        .vital-warning {
+            color: #ffaa00;
+        }
+
+        .ecg-container {
+            height: 50px;
+            border: 1px solid #40e0d0;
+            background: rgba(0, 0, 0, 0.8);
+            margin: 5px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ecg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(64, 224, 208, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(64, 224, 208, 0.1) 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+
+        .ecg-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: transparent;
+        }
+
+        .ecg-wave {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #ff8c00;
+            transform: translateY(-50%);
+            animation: ecg-scroll 3s linear infinite;
+        }
+
+        @keyframes ecg-scroll {
+            0% { left: 100%; }
+            100% { left: -100%; }
+        }
+
+        .ecg-wave::before {
+            content: '';
+            position: absolute;
+            left: 20%;
+            top: -15px;
+            width: 0;
+            height: 0;
+            border-left: 2px solid transparent;
+            border-right: 2px solid transparent;
+            border-bottom: 30px solid #ff8c00;
+            animation: heartbeat-spike 3s linear infinite;
+        }
+
+        .ecg-wave::after {
+            content: '';
+            position: absolute;
+            left: 25%;
+            top: 15px;
+            width: 0;
+            height: 0;
+            border-left: 2px solid transparent;
+            border-right: 2px solid transparent;
+            border-top: 15px solid #ff8c00;
+        }
+
+        @keyframes heartbeat-spike {
+            0%, 19%, 21%, 100% { opacity: 0.3; }
+            20% { opacity: 1; }
+        }
+
+        .dream-generation {
+            flex: 1;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #40e0d0;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .generation-title {
+            color: #40e0d0;
+            font-size: 8px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 1px solid #40e0d0;
+            padding-bottom: 3px;
+        }
+
+        .dream-terminal {
+            flex: 1;
+            font-size: 8px;
+            line-height: 1.2;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .terminal-line {
+            margin-bottom: 1px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .terminal-line.fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 6px;
+            height: 10px;
+            background: #40e0d0;
+            animation: blink 1s infinite;
+            margin-left: 1px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .json-key {
+            color: #40e0d0;
+            font-weight: bold;
+        }
+
+        .json-string {
+            color: #40e0d0;
+        }
+
+        .json-number {
+            color: #ff8c00;
+        }
+
+        .json-boolean {
+            color: #ff8c00;
+        }
+
+        .json-null {
+            color: #666;
+        }
+
+        .job-id {
+            color: #ff8c00;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .status-processing {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+
+        .scene-text {
+            color: #40e0d0;
+            font-style: italic;
+        }
+
+        .system-msg {
+            color: #ff8c00;
+            font-style: italic;
+        }
+
+        .data-stream {
+            color: #40e0d0;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">MOVIEDREAMS</div>
+                <div class="corp">LUCIDVISIONS</div>
+            </div>
+            <div class="model-badge">
+                <span class="model-badge-label">3D ASSET</span>
+                BOEING 737
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="patient-info">
+                <div class="patient-id">SESIÓN: LV-4091 - FLIGHT DREAM PROTOCOL</div>
+                <div class="dream-theme">ESTADO: REM PROFUNDO - Generación IA en tiempo real</div>
+            </div>
+
+            <div class="viewer-3d" id="viewer3d">
+                <div class="viewer-label">MODELO 3D - GENERANDO...</div>
+                <div class="viewer-stats" id="viewerStats">
+                    VÉRTICES: 0 | CARAS: 0
+                </div>
+                <div class="viewer-progress" id="viewerProgress" style="width: 0%"></div>
+            </div>
+
+            <div class="monitors-container">
+                <div class="health-monitor">
+                    <div class="health-title">SIGNOS VITALES</div>
+
+                    <div class="vital-sign">
+                        <span class="vital-label">BPM:</span>
+                        <span class="vital-value" id="heartRate">72</span>
+                    </div>
+
+                    <div class="ecg-container">
+                        <div class="ecg-grid"></div>
+                        <div class="ecg-line">
+                            <div class="ecg-wave"></div>
+                        </div>
+                    </div>
+
+                    <div class="vital-sign">
+                        <span class="vital-label">O2:</span>
+                        <span class="vital-value" id="oxygenSat">98%</span>
+                    </div>
+
+                    <div class="vital-sign">
+                        <span class="vital-label">TEMP:</span>
+                        <span class="vital-value" id="temperature">36.8°C</span>
+                    </div>
+
+                    <div class="vital-sign">
+                        <span class="vital-label">REM:</span>
+                        <span class="vital-value" id="remPhase">DEEP</span>
+                    </div>
+
+                    <div class="vital-sign">
+                        <span class="vital-label">LUC:</span>
+                        <span class="vital-value" id="lucidity">87%</span>
+                    </div>
+                </div>
+
+                <div class="dream-generation">
+                    <div class="generation-title">GENERACIÓN - FLIGHT DREAMS AI</div>
+                    <div class="dream-terminal" id="dreamTerminal"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ===== Inline Three.js Mini Engine (no external dependencies) =====
+    // Lightweight 3D renderer using Canvas 2D for a self-contained page
+    const Renderer3D = (() => {
+        let canvas, ctx, width, height;
+        let camera = { x: 0, y: 0, z: -350, fov: 500 };
+        let rotationY = 0, rotationX = 0.15;
+        let meshes = [];
+        let revealProgress = 0;
+        let totalFaces = 0;
+        let totalVertices = 0;
+
+        function init(container) {
+            canvas = document.createElement('canvas');
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            container.appendChild(canvas);
+            resize();
+            window.addEventListener('resize', resize);
+        }
+
+        function resize() {
+            const parent = canvas.parentElement;
+            width = parent.clientWidth;
+            height = parent.clientHeight;
+            canvas.width = width * (window.devicePixelRatio || 1);
+            canvas.height = height * (window.devicePixelRatio || 1);
+            ctx = canvas.getContext('2d');
+            ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+        }
+
+        function project(x, y, z) {
+            // Rotate Y
+            let cosY = Math.cos(rotationY), sinY = Math.sin(rotationY);
+            let rx = x * cosY - z * sinY;
+            let rz = x * sinY + z * cosY;
+            // Rotate X
+            let cosX = Math.cos(rotationX), sinX = Math.sin(rotationX);
+            let ry = y * cosX - rz * sinX;
+            let rz2 = y * sinX + rz * cosX;
+            // Perspective
+            let dz = rz2 - camera.z;
+            if (dz < 1) dz = 1;
+            let scale = camera.fov / dz;
+            return {
+                x: rx * scale + width / 2 + camera.x,
+                y: -ry * scale + height / 2 + camera.y,
+                z: dz,
+                scale: scale
+            };
+        }
+
+        function addMesh(vertices, faces, color, wireColor) {
+            meshes.push({ vertices, faces, color, wireColor });
+            totalFaces += faces.length;
+            totalVertices += vertices.length;
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Grid background
+            ctx.strokeStyle = 'rgba(64, 224, 208, 0.06)';
+            ctx.lineWidth = 0.5;
+            for (let gx = 0; gx < width; gx += 10) {
+                ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, height); ctx.stroke();
+            }
+            for (let gy = 0; gy < height; gy += 10) {
+                ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(width, gy); ctx.stroke();
+            }
+
+            // Collect all faces with projected data for depth sorting
+            let allFaces = [];
+            let visibleFaceCount = Math.floor(totalFaces * revealProgress);
+            let faceIndex = 0;
+
+            meshes.forEach(mesh => {
+                const projected = mesh.vertices.map(v => project(v[0], v[1], v[2]));
+
+                mesh.faces.forEach(face => {
+                    if (faceIndex >= visibleFaceCount) {
+                        faceIndex++;
+                        return;
+                    }
+                    faceIndex++;
+
+                    const pts = face.map(i => projected[i]);
+                    const avgZ = pts.reduce((s, p) => s + p.z, 0) / pts.length;
+
+                    // Simple normal calculation for lighting
+                    if (pts.length >= 3) {
+                        const ax = pts[1].x - pts[0].x, ay = pts[1].y - pts[0].y;
+                        const bx = pts[2].x - pts[0].x, by = pts[2].y - pts[0].y;
+                        const cross = ax * by - ay * bx;
+                        const brightness = Math.max(0.15, Math.min(1, Math.abs(cross) / 8000));
+
+                        allFaces.push({
+                            pts, avgZ, brightness,
+                            color: mesh.color,
+                            wireColor: mesh.wireColor
+                        });
+                    }
+                });
+            });
+
+            // Sort by depth (painter's algorithm)
+            allFaces.sort((a, b) => b.avgZ - a.avgZ);
+
+            // Draw faces
+            allFaces.forEach(face => {
+                const { pts, brightness, color, wireColor } = face;
+
+                // Fill
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x, pts[0].y);
+                for (let i = 1; i < pts.length; i++) {
+                    ctx.lineTo(pts[i].x, pts[i].y);
+                }
+                ctx.closePath();
+
+                const r = parseInt(color.slice(1, 3), 16);
+                const g = parseInt(color.slice(3, 5), 16);
+                const b2 = parseInt(color.slice(5, 7), 16);
+                ctx.fillStyle = `rgba(${Math.floor(r * brightness)}, ${Math.floor(g * brightness)}, ${Math.floor(b2 * brightness)}, 0.85)`;
+                ctx.fill();
+
+                // Wireframe
+                ctx.strokeStyle = wireColor;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            });
+
+            // Draw "generating" particles at the reveal edge
+            if (revealProgress < 1) {
+                let edgeStart = Math.max(0, visibleFaceCount - 15);
+                let particleFaceIdx = 0;
+                meshes.forEach(mesh => {
+                    const projected = mesh.vertices.map(v => project(v[0], v[1], v[2]));
+                    mesh.faces.forEach(face => {
+                        if (particleFaceIdx >= edgeStart && particleFaceIdx < visibleFaceCount) {
+                            const pts = face.map(i => projected[i]);
+                            pts.forEach(p => {
+                                const px = p.x + (Math.random() - 0.5) * 20;
+                                const py = p.y + (Math.random() - 0.5) * 20;
+                                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(64, 224, 208, 0.7)' : 'rgba(255, 140, 0, 0.7)';
+                                ctx.fillRect(px, py, 1.5, 1.5);
+                            });
+                        }
+                        particleFaceIdx++;
+                    });
+                });
+            }
+
+            // Scanline effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+            for (let sy = 0; sy < height; sy += 2) {
+                ctx.fillRect(0, sy, width, 1);
+            }
+        }
+
+        function setReveal(progress) {
+            revealProgress = Math.min(1, Math.max(0, progress));
+        }
+
+        function setRotation(ry, rx) {
+            rotationY = ry;
+            rotationX = rx;
+        }
+
+        function getStats() {
+            let visibleFaces = Math.floor(totalFaces * revealProgress);
+            let visibleVerts = Math.floor(totalVertices * revealProgress);
+            return { vertices: visibleVerts, faces: visibleFaces, totalFaces, totalVertices };
+        }
+
+        return { init, addMesh, render, setReveal, setRotation, getStats, resize };
+    })();
+
+    // ===== Boeing 737 Model Builder =====
+    function buildBoeing737() {
+        const turquoiseDark = '#0a4a45';
+        const turquoiseMid = '#155e58';
+        const darkGray = '#1a1a2e';
+        const wireColor = 'rgba(64, 224, 208, 0.35)';
+        const wireAccent = 'rgba(255, 140, 0, 0.25)';
+
+        // Helper: create cylinder vertices and faces
+        function createCylinder(radiusTop, radiusBottom, length, segments, offsetX, offsetY, offsetZ) {
+            const verts = [];
+            const faces = [];
+            const base = 0;
+
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                // Front ring
+                verts.push([offsetX - length / 2, offsetY + cos * radiusTop, offsetZ + sin * radiusTop]);
+                // Back ring
+                verts.push([offsetX + length / 2, offsetY + cos * radiusBottom, offsetZ + sin * radiusBottom]);
+            }
+
+            for (let i = 0; i < segments; i++) {
+                const a = base + i * 2;
+                const b = a + 1;
+                const c = a + 2;
+                const d = a + 3;
+                faces.push([a, b, d, c]);
+            }
+
+            return { vertices: verts, faces };
+        }
+
+        // Helper: create a tapered nose cone
+        function createNoseCone(radius, length, segments, offsetX, offsetY, offsetZ) {
+            const verts = [];
+            const faces = [];
+            // Tip
+            verts.push([offsetX - length, offsetY, offsetZ]);
+            // Ring
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                verts.push([offsetX, offsetY + Math.cos(angle) * radius, offsetZ + Math.sin(angle) * radius]);
+            }
+            for (let i = 1; i <= segments; i++) {
+                faces.push([0, i, i + 1]);
+            }
+            return { vertices: verts, faces };
+        }
+
+        // Helper: create a flat quad panel (wing, tail)
+        function createPanel(w, h, offsetX, offsetY, offsetZ, sweepX, taperW) {
+            const tw = taperW || w;
+            const verts = [
+                [offsetX, offsetY, offsetZ - w / 2],
+                [offsetX, offsetY, offsetZ + w / 2],
+                [offsetX + sweepX, offsetY + h, offsetZ + tw / 2],
+                [offsetX + sweepX, offsetY + h, offsetZ - tw / 2]
+            ];
+            const faces = [[0, 1, 2, 3]];
+            return { vertices: verts, faces };
+        }
+
+        // Helper: subdivide a panel into grid
+        function createSubdividedPanel(w, h, offsetX, offsetY, offsetZ, sweepX, taperW, segsW, segsH) {
+            const tw = taperW || w;
+            const verts = [];
+            const faces = [];
+
+            for (let j = 0; j <= segsH; j++) {
+                const t = j / segsH;
+                const currentW = w + (tw - w) * t;
+                const cx = offsetX + sweepX * t;
+                const cy = offsetY + h * t;
+                for (let i = 0; i <= segsW; i++) {
+                    const s = i / segsW;
+                    verts.push([cx, cy, offsetZ - currentW / 2 + currentW * s]);
+                }
+            }
+
+            for (let j = 0; j < segsH; j++) {
+                for (let i = 0; i < segsW; i++) {
+                    const a = j * (segsW + 1) + i;
+                    const b = a + 1;
+                    const c = a + (segsW + 1);
+                    const d = c + 1;
+                    faces.push([a, b, d, c]);
+                }
+            }
+
+            return { vertices: verts, faces };
+        }
+
+        // FUSELAGE - main body cylinder
+        const fuselage = createCylinder(18, 18, 180, 16, 0, 0, 0);
+        Renderer3D.addMesh(fuselage.vertices, fuselage.faces, turquoiseDark, wireColor);
+
+        // NOSE CONE
+        const nose = createNoseCone(18, 35, 16, -90, 0, 0);
+        Renderer3D.addMesh(nose.vertices, nose.faces, turquoiseMid, wireColor);
+
+        // TAIL CONE (tapered cylinder)
+        const tailCone = createCylinder(18, 8, 30, 12, 105, 0, 0);
+        Renderer3D.addMesh(tailCone.vertices, tailCone.faces, turquoiseDark, wireColor);
+
+        // LEFT WING
+        const leftWing = createSubdividedPanel(20, 75, -10, -14, -18, 25, 10, 4, 6);
+        Renderer3D.addMesh(leftWing.vertices, leftWing.faces, darkGray, wireColor);
+
+        // RIGHT WING
+        const rightWingVerts = leftWing.vertices.map(v => [v[0], v[1], -v[2] + 36]);
+        Renderer3D.addMesh(rightWingVerts, leftWing.faces, darkGray, wireColor);
+
+        // LEFT ENGINE - nacelle
+        const leftEngine = createCylinder(7, 6, 25, 10, -5, -22, -40);
+        Renderer3D.addMesh(leftEngine.vertices, leftEngine.faces, '#0d3330', wireAccent);
+
+        // LEFT ENGINE - intake ring
+        const leftIntake = createCylinder(8, 7, 3, 10, -18, -22, -40);
+        Renderer3D.addMesh(leftIntake.vertices, leftIntake.faces, turquoiseMid, wireAccent);
+
+        // RIGHT ENGINE - nacelle
+        const rightEngine = createCylinder(7, 6, 25, 10, -5, -22, 40);
+        Renderer3D.addMesh(rightEngine.vertices, rightEngine.faces, '#0d3330', wireAccent);
+
+        // RIGHT ENGINE - intake ring
+        const rightIntake = createCylinder(8, 7, 3, 10, -18, -22, 40);
+        Renderer3D.addMesh(rightIntake.vertices, rightIntake.faces, turquoiseMid, wireAccent);
+
+        // VERTICAL STABILIZER (tail fin)
+        const vStab = createSubdividedPanel(3, 35, 95, 5, 0, 15, 2, 2, 5);
+        Renderer3D.addMesh(vStab.vertices, vStab.faces, darkGray, wireColor);
+
+        // LEFT HORIZONTAL STABILIZER
+        const leftHStab = createSubdividedPanel(8, 22, 95, -2, -8, 10, 4, 2, 4);
+        Renderer3D.addMesh(leftHStab.vertices, leftHStab.faces, darkGray, wireColor);
+
+        // RIGHT HORIZONTAL STABILIZER
+        const rightHStabVerts = leftHStab.vertices.map(v => [v[0], v[1], -v[2] + 16]);
+        Renderer3D.addMesh(rightHStabVerts, leftHStab.faces, darkGray, wireColor);
+
+        // COCKPIT WINDOWS (subtle accent)
+        const cockpit = createCylinder(12, 2, 8, 8, -118, 5, 0);
+        Renderer3D.addMesh(cockpit.vertices, cockpit.faces, '#1a3a38', 'rgba(64, 224, 208, 0.5)');
+    }
+
+    // ===== Dream Scenes for Flight Movie =====
+    const dreamScenes = [
+        "Cabina del Boeing 737 - pantallas neurales se activan",
+        "Pasajeros conectados a la red de sueños - luces parpadean",
+        "Motor de IA genera paisaje onírico - nubes fractales",
+        "Despegue hacia el subconsciente - turbulencia neuronal",
+        "Vista desde 35000 pies - ciudades de recuerdos abajo",
+        "Sistema de sueños detecta anomalía - alerta cortical",
+        "Co-piloto verifica integridad del sueño compartido",
+        "Aterrizaje suave en plataforma del sueño profundo",
+        "Recalibración neural - sujetos en sincronía REM",
+        "Boeing cruza barrera entre vigilia y sueño lúcido",
+        "IA genera turbulencia emocional - compensando...",
+        "Escena de vuelo nocturno - estrellas son neuronas"
+    ];
+
+    let dreamTerminal = document.getElementById('dreamTerminal');
+    let currentSceneIndex = 0;
+    let isGenerating = false;
+
+    // Health monitoring
+    let baseHeartRate = 72;
+    let currentHeartRate = 72;
+
+    function updateVitals() {
+        const variation = (Math.random() - 0.5) * 8;
+        currentHeartRate = Math.max(60, Math.min(90, baseHeartRate + variation));
+        document.getElementById('heartRate').textContent = Math.round(currentHeartRate);
+
+        const o2Sat = Math.max(95, Math.min(100, 98 + (Math.random() - 0.5) * 4));
+        document.getElementById('oxygenSat').textContent = Math.round(o2Sat) + '%';
+
+        const temp = (36.4 + (Math.random() - 0.5) * 0.8).toFixed(1);
+        document.getElementById('temperature').textContent = temp + '°C';
+
+        const remPhases = ['LIGHT', 'DEEP', 'REM', 'ACTIVE'];
+        const currentPhase = remPhases[Math.floor(Math.random() * remPhases.length)];
+        document.getElementById('remPhase').textContent = currentPhase;
+
+        const lucidity = Math.max(65, Math.min(98, 87 + (Math.random() - 0.5) * 25));
+        document.getElementById('lucidity').textContent = Math.round(lucidity) + '%';
+
+        if (currentPhase === 'ACTIVE' || currentPhase === 'REM') {
+            baseHeartRate = Math.min(85, baseHeartRate + 0.5);
+        } else {
+            baseHeartRate = Math.max(68, baseHeartRate - 0.3);
+        }
+    }
+
+    function addTerminalLine(text, className) {
+        className = className || '';
+        const line = document.createElement('div');
+        line.className = 'terminal-line ' + className;
+        line.innerHTML = text;
+        dreamTerminal.appendChild(line);
+
+        const lines = dreamTerminal.children;
+        if (lines.length > 30) {
+            const oldLine = lines[0];
+            oldLine.classList.add('fade-out');
+            setTimeout(() => {
+                if (oldLine.parentNode) {
+                    oldLine.parentNode.removeChild(oldLine);
+                }
+            }, 500);
+        }
+    }
+
+    async function generateFlightDream() {
+        if (isGenerating) return;
+        isGenerating = true;
+
+        const scene = dreamScenes[currentSceneIndex];
+        currentSceneIndex = (currentSceneIndex + 1) % dreamScenes.length;
+
+        const jobId = 'f' + Math.random().toString(36).substr(2, 6);
+        const sceneId = Math.random().toString(36).substr(2, 4);
+        const neuralId = 'N-' + Math.floor(Math.random() * 9000 + 1000);
+
+        addTerminalLine('<span class="system-msg">[SCENE ' + String(currentSceneIndex).padStart(2, '0') + '] Renderizando sueño...</span>');
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        addTerminalLine('{');
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        addTerminalLine('  <span class="json-key">"dream_id"</span>: <span class="json-string job-id">"' + sceneId + '"</span>,');
+        await new Promise(resolve => setTimeout(resolve, 120));
+
+        addTerminalLine('  <span class="json-key">"neural_link"</span>: <span class="json-string job-id">"' + neuralId + '"</span>,');
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        addTerminalLine('  <span class="json-key">"sequence"</span>: <span class="json-string scene-text">"' + scene + '"</span>,');
+        await new Promise(resolve => setTimeout(resolve, 150));
+
+        const status = Math.random() > 0.5 ? 'completed' : 'processing';
+        addTerminalLine('  <span class="json-key">"status"</span>: <span class="json-string status-' + status + '">"' + status + '"</span>,');
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        if (status === 'completed') {
+            addTerminalLine('  <span class="json-key">"ai_render"</span>: {');
+            await new Promise(resolve => setTimeout(resolve, 80));
+            addTerminalLine('    <span class="json-key">"model"</span>: <span class="json-string">"boeing_737_mesh"</span>,');
+            await new Promise(resolve => setTimeout(resolve, 80));
+            addTerminalLine('    <span class="json-key">"vertices"</span>: <span class="json-number">' + Math.floor(Math.random() * 4000 + 2000) + '</span>,');
+            await new Promise(resolve => setTimeout(resolve, 80));
+            addTerminalLine('    <span class="json-key">"neural_depth"</span>: <span class="json-number">' + (Math.random() * 0.9 + 0.1).toFixed(3) + '</span>,');
+            await new Promise(resolve => setTimeout(resolve, 80));
+            addTerminalLine('    <span class="json-key">"dream_layer"</span>: <span class="json-string">"subconscious"</span>');
+            await new Promise(resolve => setTimeout(resolve, 80));
+            addTerminalLine('  },');
+            await new Promise(resolve => setTimeout(resolve, 80));
+            addTerminalLine('  <span class="json-key">"brain_sync"</span>: [<span class="json-string">"alpha"</span>, <span class="json-string">"theta"</span>, <span class="json-string">"delta"</span>],');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            addTerminalLine('  <span class="json-key">"latency"</span>: <span class="json-number">' + (Math.random() * 15 + 2).toFixed(1) + 'ms</span>');
+        } else {
+            addTerminalLine('  <span class="json-key">"progress"</span>: <span class="json-number">' + Math.floor(Math.random() * 100) + '%</span>,');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            addTerminalLine('  <span class="json-key">"neural_load"</span>: <span class="json-number">' + (Math.random() * 0.4 + 0.6).toFixed(2) + '</span>,');
+            await new Promise(resolve => setTimeout(resolve, 80));
+            addTerminalLine('  <span class="json-key">"tester_id"</span>: <span class="json-string">"SBJ-' + Math.floor(Math.random() * 99 + 1).toString().padStart(2, '0') + '"</span>');
+        }
+        await new Promise(resolve => setTimeout(resolve, 80));
+
+        addTerminalLine('}');
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        addTerminalLine('<span class="data-stream">│ Frame ' + Math.floor(Math.random() * 1000) + ' │ GPU: ' + (Math.random() * 2 + 1).toFixed(1) + 'GB │ VRAM: ' + Math.floor(Math.random() * 80 + 20) + '% │</span>');
+        await new Promise(resolve => setTimeout(resolve, 50));
+        addTerminalLine('<span class="system-msg">[' + status.toUpperCase() + '] ' + (status === 'completed' ? 'Sueño inyectado en corteza visual' : 'Procesando ondas cerebrales...') + '</span>');
+        await new Promise(resolve => setTimeout(resolve, 150));
+        addTerminalLine('');
+
+        isGenerating = false;
+    }
+
+    // ===== 3D Animation Loop =====
+    let startTime = Date.now();
+    let revealDuration = 20000; // 20 seconds to fully reveal the model
+    let revealed = false;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(1, elapsed / revealDuration);
+
+        // Slow rotation
+        const ry = elapsed * 0.0005;
+        const rx = 0.2 + Math.sin(elapsed * 0.0003) * 0.1;
+
+        Renderer3D.setRotation(ry, rx);
+        Renderer3D.setReveal(progress);
+        Renderer3D.render();
+
+        // Update stats overlay
+        const stats = Renderer3D.getStats();
+        document.getElementById('viewerStats').textContent =
+            'VÉRTICES: ' + stats.vertices + ' | CARAS: ' + stats.faces;
+
+        // Update progress bar
+        document.getElementById('viewerProgress').style.width = (progress * 100) + '%';
+
+        // Update label when complete
+        if (progress >= 1 && !revealed) {
+            revealed = true;
+            document.querySelector('.viewer-label').textContent = 'MODELO 3D - BOEING 737 COMPLETO';
+            document.querySelector('.viewer-label').style.color = '#00ff00';
+        }
+    }
+
+    // ===== Initialize =====
+    function init() {
+        // Init 3D viewer
+        Renderer3D.init(document.getElementById('viewer3d'));
+        buildBoeing737();
+
+        // Start vitals
+        updateVitals();
+        setInterval(updateVitals, 2000);
+
+        // Start dream generation
+        setTimeout(() => {
+            generateFlightDream();
+            setInterval(() => {
+                if (!isGenerating) {
+                    generateFlightDream();
+                }
+            }, 2500);
+        }, 1000);
+
+        // Start 3D animation
+        animate();
+    }
+
+    init();
+    </script>
+</body>
+</html>
