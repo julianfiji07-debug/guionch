@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOVIEDREAMS - LucidVisions Corp</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050608;color:#3edcd0;font-family:'Courier New',monospace;overflow:hidden;height:100vh;width:100vw}
+.root{display:grid;grid-template-rows:38px 1fr;height:100vh;width:100vw}
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#080a0c;border-bottom:1px solid #1a3a38}
+.logo{font-size:15px;font-weight:bold;letter-spacing:3px;color:#3edcd0;text-shadow:0 0 12px rgba(62,220,208,.5)}
+.logo-sub{font-size:8px;color:#d08c3e;letter-spacing:2px;margin-left:8px}
+.header-right{display:flex;gap:18px;font-size:9px;color:#3edcd055}
+.header-right span{color:#3edcd0}
+/* MAIN GRID */
+.main{display:grid;grid-template-columns:280px 1fr 300px;grid-template-rows:1fr;gap:0;height:100%;min-height:0}
+/* PANELS */
+.panel{background:#080a0c;border:1px solid #1a3a38;margin:3px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.panel-title{font-size:8px;font-weight:bold;letter-spacing:1.5px;color:#3edcd0;padding:5px 8px;background:#0a0f12;border-bottom:1px solid #1a3a38;text-transform:uppercase;flex-shrink:0;display:flex;justify-content:space-between;align-items:center}
+.panel-title .indicator{width:6px;height:6px;border-radius:50%;background:#3edcd0;box-shadow:0 0 6px #3edcd0;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+.panel-body{flex:1;padding:6px 8px;overflow:hidden;font-size:8px;line-height:1.5;position:relative}
+/* LEFT COLUMN */
+.left-col{display:flex;flex-direction:column;gap:0;min-height:0}
+/* SESSION LOG */
+.log-line{color:#3edcd0aa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log-line .ts{color:#d08c3e88;margin-right:4px}
+.log-line .tag{color:#d08c3e;font-weight:bold}
+.log-line .val{color:#3edcd0}
+.log-line .ok{color:#2ecc71}
+.log-line .warn{color:#e0a83e}
+/* NODE RENDER STATUS */
+.waveform-canvas{width:100%;height:55px;display:block}
+.stat-row{display:flex;justify-content:space-between;padding:1px 0;border-bottom:1px solid #0d1a18}
+.stat-label{color:#3edcd077}
+.stat-val{color:#d08c3e;font-weight:bold}
+/* CENTER */
+.center-col{display:flex;flex-direction:column;gap:0;min-height:0}
+.main-view{flex:1;min-height:0}
+.main-view .panel-body{padding:0}
+.main-canvas{width:100%;height:100%;display:block}
+.sub-panels{display:grid;grid-template-columns:repeat(4,1fr);height:120px;flex-shrink:0}
+.sub-panels .panel-body{font-size:7px}
+.mini-canvas{width:100%;height:40px;display:block;margin:2px 0}
+.sub-stat{display:flex;justify-content:space-between;padding:1px 0}
+.sub-stat .lbl{color:#3edcd077}
+.sub-stat .v{color:#d08c3e}
+/* RIGHT COLUMN */
+.right-col{display:flex;flex-direction:column;gap:0;min-height:0}
+.session-banner{font-size:7px;padding:6px 8px;background:#0a0f12;border-bottom:1px solid #1a3a38;color:#d08c3e;letter-spacing:.5px;flex-shrink:0;line-height:1.4}
+.session-banner .sess-id{color:#3edcd0;font-weight:bold}
+/* MEMORY BARS */
+.mem-bar-row{display:flex;align-items:center;gap:4px;margin:2px 0}
+.mem-label{width:50px;font-size:7px;color:#3edcd077;text-align:right}
+.mem-track{flex:1;height:8px;background:#0d1a18;border:1px solid #1a3a3855;position:relative;overflow:hidden}
+.mem-fill{height:100%;transition:width .8s ease}
+.mem-pct{font-size:7px;width:28px;color:#d08c3e;text-align:right}
+/* GENERATION TERMINAL */
+.gen-terminal{flex:1;overflow:hidden;min-height:0}
+.gen-line{margin-bottom:1px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.json-key{color:#3edcd0;font-weight:bold}
+.json-str{color:#3edcd0cc}
+.json-num{color:#d08c3e}
+.json-ok{color:#2ecc71}
+.json-proc{color:#e0a83e}
+/* BRAIN ICON */
+.brain-section{height:100px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-top:1px solid #1a3a38}
+.brain-canvas{width:90px;height:80px}
+/* RENDER QUEUE (bottom-left area integrated) */
+.render-queue .panel-body{overflow:hidden}
+.rq-row{display:flex;align-items:center;gap:4px;margin:2px 0}
+.rq-id{color:#d08c3e;width:55px;font-size:7px}
+.rq-bar-track{flex:1;height:6px;background:#0d1a18;border:1px solid #1a3a3855;overflow:hidden}
+.rq-bar-fill{height:100%;background:#3edcd0;transition:width 1s ease}
+.rq-pct{font-size:7px;width:24px;color:#3edcd0;text-align:right}
+/* CURSOR */
+.cursor-blink{display:inline-block;width:5px;height:9px;background:#3edcd0;animation:cblink .8s infinite}
+@keyframes cblink{0%,49%{opacity:1}50%,100%{opacity:0}}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#050608}
+::-webkit-scrollbar-thumb{background:#1a3a38}
+/* SCANLINE */
+.root::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);z-index:9999}
+</style>
+</head>
+<body>
+<div class="root">
+  <!-- HEADER -->
+  <div class="header">
+    <div style="display:flex;align-items:baseline">
+      <span class="logo">MOVIEDREAMS</span>
+      <span class="logo-sub">LUCIDVISIONS CORP</span>
+    </div>
+    <div class="header-right">
+      SYS: <span id="sysStatus">NOMINAL</span> &nbsp;|&nbsp;
+      NET: <span id="netLatency">12ms</span> &nbsp;|&nbsp;
+      UPTIME: <span id="uptime">04:32:17</span> &nbsp;|&nbsp;
+      <span style="color:#2ecc71">● CONNECTED</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+      <!-- Session Log -->
+      <div class="panel" style="flex:1.2">
+        <div class="panel-title">Session 4 — Commercial Flight Log <div class="indicator"></div></div>
+        <div class="panel-body" id="sessionLog"></div>
+      </div>
+      <!-- Node Render Status -->
+      <div class="panel" style="flex:0.8">
+        <div class="panel-title">Node Render Status <div class="indicator"></div></div>
+        <div class="panel-body">
+          <canvas class="waveform-canvas" id="eegCanvas"></canvas>
+          <div class="stat-row"><span class="stat-label">CPU LOAD</span><span class="stat-val" id="cpuLoad">67%</span></div>
+          <div class="stat-row"><span class="stat-label">GPU UTIL</span><span class="stat-val" id="gpuUtil">89%</span></div>
+          <div class="stat-row"><span class="stat-label">VRAM</span><span class="stat-val" id="vramUse">7.2 / 12 GB</span></div>
+          <div class="stat-row"><span class="stat-label">RENDER FPS</span><span class="stat-val" id="renderFps">60.0</span></div>
+          <div class="stat-row"><span class="stat-label">THREADS</span><span class="stat-val" id="threadCount">16 / 16</span></div>
+          <div class="stat-row"><span class="stat-label">SHADER COMP</span><span class="stat-val" id="shaderComp">READY</span></div>
+        </div>
+      </div>
+      <!-- Render Queue -->
+      <div class="panel" style="flex:0.6">
+        <div class="panel-title">Render Queue &amp; Rendered <div class="indicator"></div></div>
+        <div class="panel-body render-queue" id="renderQueue"></div>
+      </div>
+    </div>
+
+    <!-- CENTER COLUMN -->
+    <div class="center-col">
+      <!-- Main 3D View -->
+      <div class="panel main-view" style="flex:1">
+        <div class="panel-title">Visual Stimulus &amp; Neural Projection <div class="indicator"></div></div>
+        <div class="panel-body">
+          <canvas class="main-canvas" id="mainCanvas"></canvas>
+        </div>
+      </div>
+      <!-- Sub panels -->
+      <div class="sub-panels">
+        <div class="panel">
+          <div class="panel-title">Video Card Status</div>
+          <div class="panel-body">
+            <canvas class="mini-canvas" id="miniCanvas1"></canvas>
+            <div class="sub-stat"><span class="lbl">TEMP</span><span class="v" id="gpuTemp">72°C</span></div>
+            <div class="sub-stat"><span class="lbl">CLOCK</span><span class="v" id="gpuClock">1845 MHz</span></div>
+            <div class="sub-stat"><span class="lbl">POWER</span><span class="v" id="gpuPower">285W</span></div>
+            <div class="sub-stat"><span class="lbl">FAN</span><span class="v" id="gpuFan">68%</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Layout Order</div>
+          <div class="panel-body">
+            <canvas class="mini-canvas" id="miniCanvas2"></canvas>
+            <div class="sub-stat"><span class="lbl">LAYERS</span><span class="v" id="layerCt">24</span></div>
+            <div class="sub-stat"><span class="lbl">DEPTH</span><span class="v" id="depthVal">512</span></div>
+            <div class="sub-stat"><span class="lbl">BLEND</span><span class="v">ALPHA</span></div>
+            <div class="sub-stat"><span class="lbl">Z-SORT</span><span class="v">ON</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Simulation Order</div>
+          <div class="panel-body">
+            <canvas class="mini-canvas" id="miniCanvas3"></canvas>
+            <div class="sub-stat"><span class="lbl">STEP</span><span class="v" id="simStep">0.016s</span></div>
+            <div class="sub-stat"><span class="lbl">BODIES</span><span class="v" id="simBodies">1,247</span></div>
+            <div class="sub-stat"><span class="lbl">COLLIDE</span><span class="v">ON</span></div>
+            <div class="sub-stat"><span class="lbl">WIND</span><span class="v" id="simWind">3.2 m/s</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Render Icon</div>
+          <div class="panel-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <canvas id="miniCanvas4" width="60" height="50"></canvas>
+            <div style="font-size:7px;color:#3edcd077;margin-top:4px">FRAME <span id="frameNum" style="color:#d08c3e">24847</span></div>
+            <div style="font-size:7px;color:#2ecc71;margin-top:2px">● RENDERING</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+      <!-- Session Banner -->
+      <div class="panel" style="flex:0 0 auto">
+        <div class="session-banner">
+          <span class="sess-id">SESSION LV-2087</span> — WESTERN PROTOCOL &nbsp;|&nbsp; REM ACTIVE<br>
+          DREAM: <span style="color:#3edcd0">COMMERCIAL FLIGHT SIMULATION</span> &nbsp;|&nbsp; PHASE: <span id="remPhase" style="color:#2ecc71">DEEP REM</span>
+        </div>
+      </div>
+      <!-- Memory Utilization -->
+      <div class="panel" style="flex:0.4">
+        <div class="panel-title">Memory Utilization <div class="indicator"></div></div>
+        <div class="panel-body" id="memPanel"></div>
+      </div>
+      <!-- Generation Terminal -->
+      <div class="panel" style="flex:1">
+        <div class="panel-title">Generación — Turbulence Simulation <div class="indicator"></div></div>
+        <div class="panel-body gen-terminal" id="genTerminal"></div>
+      </div>
+      <!-- Neural Activity -->
+      <div class="panel" style="flex:0.5">
+        <div class="panel-title">Neural Activity Log <div class="indicator"></div></div>
+        <div class="panel-body" id="neuralLog"></div>
+      </div>
+      <!-- Brain -->
+      <div class="panel" style="flex:0 0 auto">
+        <div class="brain-section">
+          <canvas class="brain-canvas" id="brainCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== UTILITIES =====================
+const $ = id => document.getElementById(id);
+const rand = (a,b) => Math.random()*(b-a)+a;
+const randInt = (a,b) => Math.floor(rand(a,b));
+const pick = arr => arr[randInt(0,arr.length)];
+const pad2 = n => String(n).padStart(2,'0');
+const ts = () => {const d=new Date();return pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds())};
+
+// ===================== SESSION LOG =====================
+const logEl = $('sessionLog');
+const logMessages = [
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">RENDER</span> Frame ${randInt(24000,25000)} completed in ${rand(8,18).toFixed(1)}ms`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">NEURAL</span> Synapse map updated — <span class="val">${randInt(800,1200)} nodes active</span>`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">DREAM</span> Scene transition: <span class="val">${pick(['cockpit_interior','runway_approach','cloud_layer','turbulence_zone','landing_sequence'])}</span>`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">AUDIO</span> Spatial mix: <span class="val">${pick(['engine_hum','wind_shear','cabin_ambience','radio_chatter'])}</span> @ ${rand(0.3,1).toFixed(2)}`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="ok">OK</span> Texture cache hit ratio: <span class="val">${rand(92,99).toFixed(1)}%</span>`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">PHYSICS</span> Aero model tick ${randInt(5000,9000)} — lift: ${rand(1.2,1.8).toFixed(2)} drag: ${rand(0.02,0.08).toFixed(3)}`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="warn">WARN</span> Memory pressure: page pool at ${randInt(78,95)}%`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">GEN</span> Diffusion step ${randInt(1,50)}/50 — loss: ${rand(0.001,0.02).toFixed(4)}`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">STREAM</span> Bandwidth: ${rand(120,340).toFixed(0)} MB/s — latency ${rand(0.5,3).toFixed(1)}ms`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">VITAL</span> Subject BPM: <span class="val">${randInt(65,82)}</span> SpO2: <span class="val">${randInt(96,100)}%</span> EEG: <span class="val">${pick(['θ-dominant','α-burst','δ-deep'])}</span>`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="tag">SCHED</span> Job <span class="val">${Math.random().toString(36).slice(2,8)}</span> queued — priority ${randInt(1,5)}`,
+  ()=>`<span class="ts">[${ts()}]</span> <span class="ok">DONE</span> Shader recompile: ${pick(['PBR_aircraft','volumetric_cloud','atmosphere_scatter','cockpit_glass'])} in ${randInt(12,80)}ms`
+];
+function addLog(){
+  const div=document.createElement('div');div.className='log-line';
+  div.innerHTML=pick(logMessages)();
+  logEl.appendChild(div);
+  while(logEl.children.length>60)logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop=logEl.scrollHeight;
+}
+setInterval(addLog,800);
+for(let i=0;i<15;i++)addLog();
+
+// ===================== EEG / WAVEFORM CANVAS =====================
+const eegCvs=$('eegCanvas');const eegCtx=eegCvs.getContext('2d');
+function resizeEeg(){eegCvs.width=eegCvs.parentElement.clientWidth;eegCvs.height=55}
+resizeEeg();window.addEventListener('resize',resizeEeg);
+let eegData=new Float32Array(300).fill(0);
+function tickEeg(){
+  eegData.copyWithin(0,1);
+  eegData[eegData.length-1]=Math.sin(Date.now()/200)*0.3+Math.sin(Date.now()/80)*0.15+Math.sin(Date.now()/50)*0.1+(Math.random()-0.5)*0.25;
+  const w=eegCvs.width,h=eegCvs.height;
+  eegCtx.fillStyle='#080a0c';eegCtx.fillRect(0,0,w,h);
+  // grid
+  eegCtx.strokeStyle='#1a3a3833';eegCtx.lineWidth=0.5;
+  for(let x=0;x<w;x+=12){eegCtx.beginPath();eegCtx.moveTo(x,0);eegCtx.lineTo(x,h);eegCtx.stroke()}
+  for(let y=0;y<h;y+=12){eegCtx.beginPath();eegCtx.moveTo(0,y);eegCtx.lineTo(w,y);eegCtx.stroke()}
+  // wave
+  eegCtx.strokeStyle='#3edcd0';eegCtx.lineWidth=1.5;eegCtx.shadowColor='#3edcd0';eegCtx.shadowBlur=4;
+  eegCtx.beginPath();
+  for(let i=0;i<eegData.length;i++){
+    const x=i/eegData.length*w;const y=h/2+eegData[i]*h*0.4;
+    i===0?eegCtx.moveTo(x,y):eegCtx.lineTo(x,y);
+  }
+  eegCtx.stroke();eegCtx.shadowBlur=0;
+  // second wave (alpha)
+  eegCtx.strokeStyle='#d08c3e66';eegCtx.lineWidth=1;
+  eegCtx.beginPath();
+  for(let i=0;i<eegData.length;i++){
+    const x=i/eegData.length*w;const y=h/2+Math.sin(i*0.1+Date.now()/300)*h*0.15;
+    i===0?eegCtx.moveTo(x,y):eegCtx.lineTo(x,y);
+  }
+  eegCtx.stroke();
+}
+
+// ===================== MAIN 3D WIREFRAME AIRPLANE =====================
+const mainCvs=$('mainCanvas');const ctx=mainCvs.getContext('2d');
+function resizeMain(){mainCvs.width=mainCvs.parentElement.clientWidth;mainCvs.height=mainCvs.parentElement.clientHeight}
+resizeMain();window.addEventListener('resize',resizeMain);
+
+// Airplane vertices (simplified commercial airplane shape)
+function makeAirplane(){
+  const verts=[];const edges=[];
+  // Fuselage - elongated cylinder approximation
+  const fuseLen=4.5, fuseR=0.35, fuseSegs=16, fuseRings=20;
+  for(let r=0;r<=fuseRings;r++){
+    const z=-fuseLen/2+fuseLen*r/fuseRings;
+    // Taper nose and tail
+    let radius=fuseR;
+    const t=r/fuseRings;
+    if(t<0.15) radius=fuseR*Math.sin(t/0.15*Math.PI/2);
+    if(t>0.85) radius=fuseR*Math.sin((1-t)/0.15*Math.PI/2)*0.8;
+    for(let s=0;s<fuseSegs;s++){
+      const a=s/fuseSegs*Math.PI*2;
+      verts.push([Math.cos(a)*radius, Math.sin(a)*radius-0.05, z]);
+    }
+  }
+  // Fuselage edges - along rings
+  for(let r=0;r<=fuseRings;r++){
+    for(let s=0;s<fuseSegs;s++){
+      edges.push([r*fuseSegs+s, r*fuseSegs+(s+1)%fuseSegs]);
+    }
+  }
+  // Fuselage edges - along length
+  for(let r=0;r<fuseRings;r++){
+    for(let s=0;s<fuseSegs;s+=2){
+      edges.push([r*fuseSegs+s, (r+1)*fuseSegs+s]);
+    }
+  }
+  const baseIdx=verts.length;
+  // Wings
+  const wingVerts=[
+    // Right wing (top view: z is forward, x is right)
+    [-0.3,0,0.3],[0.3,0,0.3],  // root leading/trailing
+    [-0.15,0,-0.5],[0.6,0,-0.5], // mid
+    [0,0.02,-2.2],[0.3,0.02,-2.2], // tip leading/trailing
+  ];
+  const wingEdgesLocal=[[0,1],[0,2],[1,3],[2,3],[2,4],[3,5],[4,5]];
+  // Add right wing
+  const rwBase=verts.length;
+  wingVerts.forEach(v=>verts.push([v[2],v[1]-0.05,v[0]]));
+  wingEdgesLocal.forEach(e=>edges.push([rwBase+e[0],rwBase+e[1]]));
+  // Add left wing (mirror x -> negative z in our coord)
+  const lwBase=verts.length;
+  wingVerts.forEach(v=>verts.push([v[2],v[1]-0.05,-v[0]]));
+  wingEdgesLocal.forEach(e=>edges.push([lwBase+e[0],lwBase+e[1]]));
+
+  // Horizontal stabilizer (tail wings)
+  const tailVerts=[
+    [-0.1,0,0.1],[0.15,0,0.1],
+    [0,0,-0.7],[0.1,0,-0.7],
+  ];
+  const tailEdges=[[0,1],[0,2],[1,3],[2,3]];
+  // Right tail
+  const rtBase=verts.length;
+  tailVerts.forEach(v=>verts.push([v[0]+2.0,v[1]+0.05,v[2]]));
+  tailEdges.forEach(e=>edges.push([rtBase+e[0],rtBase+e[1]]));
+  // Left tail
+  const ltBase=verts.length;
+  tailVerts.forEach(v=>verts.push([v[0]+2.0,v[1]+0.05,-v[2]]));
+  tailEdges.forEach(e=>edges.push([ltBase+e[0],ltBase+e[1]]));
+
+  // Vertical stabilizer
+  const vsVerts=[
+    [1.8,0,0],[2.2,0,0],
+    [2.0,0.6,0],[2.2,0.45,0]
+  ];
+  const vsEdges=[[0,1],[0,2],[1,3],[2,3]];
+  const vsBase=verts.length;
+  vsVerts.forEach(v=>verts.push([v[0],v[1]-0.05,v[2]]));
+  vsEdges.forEach(e=>edges.push([vsBase+e[0],vsBase+e[1]]));
+
+  // Engine nacelles (simplified)
+  for(let side of[-1,1]){
+    const cx=0.2,cy=-0.15,cz=side*0.8,er=0.12,esegs=8;
+    const enBase=verts.length;
+    for(let i=0;i<esegs;i++){
+      const a=i/esegs*Math.PI*2;
+      verts.push([cx-0.3,cy+Math.sin(a)*er,cz+Math.cos(a)*er]);
+      verts.push([cx+0.3,cy+Math.sin(a)*er,cz+Math.cos(a)*er]);
+    }
+    for(let i=0;i<esegs;i++){
+      edges.push([enBase+i*2,enBase+((i+1)%esegs)*2]); // front ring
+      edges.push([enBase+i*2+1,enBase+((i+1)%esegs)*2+1]); // back ring
+      edges.push([enBase+i*2,enBase+i*2+1]); // length
+    }
+  }
+
+  return {verts,edges};
+}
+const airplane=makeAirplane();
+
+function project(x,y,z,w,h,rotY,rotX,rotZ){
+  // Rotate Y
+  let x1=x*Math.cos(rotY)-z*Math.sin(rotY);
+  let z1=x*Math.sin(rotY)+z*Math.cos(rotY);
+  let y1=y;
+  // Rotate X
+  let y2=y1*Math.cos(rotX)-z1*Math.sin(rotX);
+  let z2=y1*Math.sin(rotX)+z1*Math.cos(rotX);
+  // Rotate Z
+  let x2=x1*Math.cos(rotZ)-y2*Math.sin(rotZ);
+  let y3=x1*Math.sin(rotZ)+y2*Math.cos(rotZ);
+  // Perspective
+  const d=6;const scale=d/(d+z2+3);
+  return [w/2+x2*scale*w*0.18, h/2+y3*scale*h*0.18, z2];
+}
+
+let rotY=0,rotX=-0.3;
+function drawAirplane(time){
+  const w=mainCvs.width,h=mainCvs.height;
+  ctx.fillStyle='#060809';ctx.fillRect(0,0,w,h);
+
+  // Background grid (ground plane effect)
+  ctx.strokeStyle='#1a3a3820';ctx.lineWidth=0.5;
+  const gridSize=40;
+  for(let gx=-w;gx<w*2;gx+=gridSize){
+    ctx.beginPath();ctx.moveTo(gx,h*0.6);ctx.lineTo(gx+w*0.3,h);ctx.stroke();
+  }
+  for(let gy=h*0.6;gy<h;gy+=20){
+    ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(w,gy);ctx.stroke();
+  }
+
+  // Floating particles
+  ctx.fillStyle='#3edcd015';
+  for(let i=0;i<60;i++){
+    const px=(Math.sin(i*7.3+time/2000)*0.5+0.5)*w;
+    const py=(Math.cos(i*3.1+time/3000)*0.5+0.5)*h;
+    const s=1+Math.sin(i+time/500)*1;
+    ctx.fillRect(px,py,s,s);
+  }
+
+  // Slow auto-rotation
+  rotY=Math.sin(time/6000)*0.8+Math.PI*0.15;
+  const rX=rotX+Math.sin(time/8000)*0.1;
+  const rZ=Math.sin(time/10000)*0.05;
+
+  // Project all vertices
+  const projected=airplane.verts.map(v=>project(v[0],v[1],v[2],w,h,rotY,rX,rZ));
+
+  // Draw edges
+  ctx.lineWidth=1;
+  airplane.edges.forEach(([a,b])=>{
+    const pa=projected[a],pb=projected[b];
+    const avgZ=(pa[2]+pb[2])/2;
+    const alpha=Math.max(0.1,Math.min(0.9,0.5-avgZ*0.1));
+    ctx.strokeStyle=`rgba(62,220,208,${alpha})`;
+    ctx.shadowColor='#3edcd0';ctx.shadowBlur=2;
+    ctx.beginPath();ctx.moveTo(pa[0],pa[1]);ctx.lineTo(pb[0],pb[1]);ctx.stroke();
+  });
+  ctx.shadowBlur=0;
+
+  // Draw vertices as dots
+  projected.forEach((p,i)=>{
+    if(i%3!==0)return; // skip some for performance
+    const alpha=Math.max(0.1,Math.min(0.7,0.4-p[2]*0.08));
+    ctx.fillStyle=`rgba(62,220,208,${alpha})`;
+    ctx.fillRect(p[0]-1,p[1]-1,2,2);
+  });
+
+  // HUD overlay text
+  ctx.fillStyle='#3edcd044';ctx.font='8px Courier New';
+  ctx.fillText(`ROT Y: ${(rotY*180/Math.PI).toFixed(1)}°`,10,15);
+  ctx.fillText(`ROT X: ${(rX*180/Math.PI).toFixed(1)}°`,10,25);
+  ctx.fillText(`VERTICES: ${airplane.verts.length}`,10,35);
+  ctx.fillText(`EDGES: ${airplane.edges.length}`,10,45);
+  ctx.fillText(`PROJECTION: PERSPECTIVE`,w-140,15);
+  ctx.fillText(`SCALE: 1.00x`,w-140,25);
+  ctx.fillText(`FRAME: ${Math.floor(time/16.67)}`,w-140,35);
+
+  // Crosshair
+  ctx.strokeStyle='#3edcd018';ctx.lineWidth=0.5;
+  ctx.beginPath();ctx.moveTo(w/2-30,h/2);ctx.lineTo(w/2+30,h/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(w/2,h/2-30);ctx.lineTo(w/2,h/2+30);ctx.stroke();
+
+  // Corner brackets
+  ctx.strokeStyle='#3edcd033';ctx.lineWidth=1;
+  const m=15,cb=4;
+  [[m,m,1,1],[w-m,m,-1,1],[m,h-m,1,-1],[w-m,h-m,-1,-1]].forEach(([x,y,dx,dy])=>{
+    ctx.beginPath();ctx.moveTo(x,y+dy*cb);ctx.lineTo(x,y);ctx.lineTo(x+dx*cb,y);ctx.stroke();
+  });
+}
+
+// ===================== MINI CANVASES =====================
+const mini1=$('miniCanvas1'),m1=mini1.getContext('2d');
+const mini2=$('miniCanvas2'),m2=mini2.getContext('2d');
+const mini3=$('miniCanvas3'),m3=mini3.getContext('2d');
+const mini4=$('miniCanvas4'),m4=mini4.getContext('2d');
+function resizeMini(){
+  [mini1,mini2,mini3].forEach(c=>{c.width=c.parentElement.clientWidth;c.height=40});
+}
+resizeMini();window.addEventListener('resize',resizeMini);
+
+let miniData1=new Float32Array(80).fill(0);
+let miniData2=new Float32Array(80).fill(0);
+let miniData3=new Float32Array(80).fill(0);
+
+function drawMiniWave(cvs,cx,data,color,type){
+  const w=cvs.width,h=cvs.height;
+  cx.fillStyle='#080a0c';cx.fillRect(0,0,w,h);
+  cx.strokeStyle='#1a3a3822';cx.lineWidth=0.5;
+  for(let y=0;y<h;y+=10){cx.beginPath();cx.moveTo(0,y);cx.lineTo(w,y);cx.stroke()}
+
+  data.copyWithin(0,1);
+  if(type==='bar'){
+    data[data.length-1]=rand(0.1,0.9);
+    cx.fillStyle=color;
+    const bw=w/data.length;
+    for(let i=0;i<data.length;i++){
+      cx.globalAlpha=0.3+data[i]*0.7;
+      cx.fillRect(i*bw,h-data[i]*h,bw-1,data[i]*h);
+    }
+    cx.globalAlpha=1;
+  } else {
+    data[data.length-1]=Math.sin(Date.now()/(100+type*50))*0.3+(Math.random()-0.5)*0.4;
+    cx.strokeStyle=color;cx.lineWidth=1.2;
+    cx.beginPath();
+    for(let i=0;i<data.length;i++){
+      const x=i/data.length*w,y=h/2+data[i]*h*0.4;
+      i===0?cx.moveTo(x,y):cx.lineTo(x,y);
+    }
+    cx.stroke();
+  }
+}
+
+// Render icon (spinning cube)
+function drawRenderIcon(time){
+  const w=60,h=50;
+  m4.fillStyle='#080a0c';m4.fillRect(0,0,w,h);
+  const cx=w/2,cy=h/2,s=12;
+  const a=time/1500;
+  // Simple rotating cube
+  const cubeVerts=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  const cubeEdges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  const proj=cubeVerts.map(v=>{
+    let x=v[0],y=v[1],z=v[2];
+    let x1=x*Math.cos(a)-z*Math.sin(a);let z1=x*Math.sin(a)+z*Math.cos(a);
+    let y1=y*Math.cos(a*0.7)-z1*Math.sin(a*0.7);let z2=y*Math.sin(a*0.7)+z1*Math.cos(a*0.7);
+    const d=4/(4+z2);
+    return [cx+x1*d*s,cy+y1*d*s];
+  });
+  m4.strokeStyle='#3edcd0';m4.lineWidth=1;m4.shadowColor='#3edcd0';m4.shadowBlur=3;
+  cubeEdges.forEach(([a,b])=>{m4.beginPath();m4.moveTo(proj[a][0],proj[a][1]);m4.lineTo(proj[b][0],proj[b][1]);m4.stroke()});
+  m4.shadowBlur=0;
+}
+
+// ===================== MEMORY UTILIZATION =====================
+const memPanel=$('memPanel');
+const memTypes=[
+  {label:'VRAM',color:'#3edcd0',pct:78},
+  {label:'SYS RAM',color:'#2ecc71',pct:62},
+  {label:'SWAP',color:'#d08c3e',pct:23},
+  {label:'CACHE',color:'#e04e3e',pct:89},
+  {label:'NEURAL',color:'#8e3ed0',pct:71},
+  {label:'TEXTURE',color:'#3e8ed0',pct:55},
+  {label:'SHADER',color:'#d0c83e',pct:44},
+];
+memTypes.forEach(m=>{
+  const row=document.createElement('div');row.className='mem-bar-row';
+  row.innerHTML=`<span class="mem-label">${m.label}</span><div class="mem-track"><div class="mem-fill" style="width:${m.pct}%;background:${m.color}"></div></div><span class="mem-pct" data-mem="${m.label}">${m.pct}%</span>`;
+  memPanel.appendChild(row);
+});
+function updateMem(){
+  memTypes.forEach(m=>{
+    m.pct=Math.max(5,Math.min(98,m.pct+(Math.random()-0.5)*8));
+    const fill=memPanel.querySelector(`.mem-fill`);
+  });
+  document.querySelectorAll('.mem-bar-row').forEach((row,i)=>{
+    const m=memTypes[i];
+    m.pct=Math.max(5,Math.min(98,m.pct+(Math.random()-0.5)*6));
+    row.querySelector('.mem-fill').style.width=m.pct+'%';
+    row.querySelector('.mem-pct').textContent=Math.round(m.pct)+'%';
+  });
+}
+setInterval(updateMem,2000);
+
+// ===================== GENERATION TERMINAL =====================
+const genTerm=$('genTerminal');
+let genQueue=[];
+const turbScenes=[
+  'cloud_dynamics','wind_shear_model','thermal_updraft','pressure_gradient',
+  'vortex_shedding','wake_turbulence','clear_air_turb','convective_cell'
+];
+function addGenLine(html){
+  const div=document.createElement('div');div.className='gen-line';div.innerHTML=html;
+  genTerm.appendChild(div);
+  while(genTerm.children.length>40)genTerm.removeChild(genTerm.firstChild);
+  genTerm.scrollTop=genTerm.scrollHeight;
+}
+async function genCycle(){
+  const scene=pick(turbScenes);
+  const jobId=Math.random().toString(36).slice(2,8);
+  addGenLine(`<span style="color:#d08c3e">[SIM]</span> Turbulence model: <span class="json-str">${scene}</span>`);
+  await new Promise(r=>setTimeout(r,300));
+  addGenLine('{');
+  await new Promise(r=>setTimeout(r,100));
+  addGenLine(`  <span class="json-key">"job_id"</span>: <span class="json-num">"${jobId}"</span>,`);
+  await new Promise(r=>setTimeout(r,120));
+  addGenLine(`  <span class="json-key">"model"</span>: <span class="json-str">"${scene}"</span>,`);
+  await new Promise(r=>setTimeout(r,100));
+  addGenLine(`  <span class="json-key">"intensity"</span>: <span class="json-num">${rand(0.1,0.95).toFixed(3)}</span>,`);
+  await new Promise(r=>setTimeout(r,100));
+  addGenLine(`  <span class="json-key">"particles"</span>: <span class="json-num">${randInt(5000,25000)}</span>,`);
+  await new Promise(r=>setTimeout(r,80));
+  addGenLine(`  <span class="json-key">"wind_vector"</span>: [${rand(-10,10).toFixed(1)}, ${rand(-2,2).toFixed(1)}, ${rand(-10,10).toFixed(1)}],`);
+  await new Promise(r=>setTimeout(r,80));
+  const status=Math.random()>0.3?'completed':'processing';
+  addGenLine(`  <span class="json-key">"status"</span>: <span class="${status==='completed'?'json-ok':'json-proc'}">"${status}"</span>`);
+  await new Promise(r=>setTimeout(r,80));
+  addGenLine('}');
+  await new Promise(r=>setTimeout(r,200));
+  addGenLine(`<span style="color:#3edcd055">─── Frame ${randInt(24000,25000)} │ Δt ${rand(0.8,2.1).toFixed(1)}ms ───</span>`);
+  await new Promise(r=>setTimeout(r,rand(1500,3000)));
+  genCycle();
+}
+setTimeout(genCycle,1000);
+
+// ===================== NEURAL ACTIVITY LOG =====================
+const neuralEl=$('neuralLog');
+const neuralMsgs=[
+  ()=>`<span class="ts">[${ts()}]</span> θ-wave amplitude: <span style="color:#d08c3e">${rand(12,45).toFixed(1)} µV</span>`,
+  ()=>`<span class="ts">[${ts()}]</span> α-rhythm: <span style="color:#d08c3e">${rand(8,13).toFixed(1)} Hz</span> — coherence ${rand(0.6,0.99).toFixed(2)}`,
+  ()=>`<span class="ts">[${ts()}]</span> δ-band power: <span style="color:#2ecc71">${rand(20,80).toFixed(0)}%</span> of baseline`,
+  ()=>`<span class="ts">[${ts()}]</span> REM saccade detected — duration <span style="color:#d08c3e">${randInt(80,200)}ms</span>`,
+  ()=>`<span class="ts">[${ts()}]</span> Lucidity index: <span style="color:#3edcd0">${rand(0.6,0.98).toFixed(2)}</span>`,
+  ()=>`<span class="ts">[${ts()}]</span> Hippocampal replay: <span style="color:#8e3ed0">ACTIVE</span>`,
+  ()=>`<span class="ts">[${ts()}]</span> Cortical sync: ${randInt(800,1400)} regions`,
+];
+function addNeural(){
+  const div=document.createElement('div');div.className='log-line';
+  div.innerHTML=pick(neuralMsgs)();
+  neuralEl.appendChild(div);
+  while(neuralEl.children.length>20)neuralEl.removeChild(neuralEl.firstChild);
+  neuralEl.scrollTop=neuralEl.scrollHeight;
+}
+setInterval(addNeural,1800);
+for(let i=0;i<6;i++)addNeural();
+
+// ===================== RENDER QUEUE =====================
+const rqEl=$('renderQueue');
+let rqJobs=[];
+for(let i=0;i<8;i++){
+  rqJobs.push({id:'RQ-'+Math.random().toString(36).slice(2,6).toUpperCase(),pct:rand(0,100)});
+}
+function drawRenderQueue(){
+  rqEl.innerHTML='';
+  rqJobs.forEach(j=>{
+    j.pct=Math.min(100,j.pct+rand(0.5,3));
+    if(j.pct>=100){j.id='RQ-'+Math.random().toString(36).slice(2,6).toUpperCase();j.pct=0;}
+    const row=document.createElement('div');row.className='rq-row';
+    const color=j.pct>=100?'#2ecc71':j.pct>60?'#3edcd0':'#d08c3e';
+    row.innerHTML=`<span class="rq-id">${j.id}</span><div class="rq-bar-track"><div class="rq-bar-fill" style="width:${j.pct}%;background:${color}"></div></div><span class="rq-pct">${Math.round(j.pct)}%</span>`;
+    rqEl.appendChild(row);
+  });
+}
+setInterval(drawRenderQueue,500);
+drawRenderQueue();
+
+// ===================== BRAIN CANVAS =====================
+const brainCvs=$('brainCanvas');const bCtx=brainCvs.getContext('2d');
+brainCvs.width=90;brainCvs.height=80;
+function drawBrain(time){
+  const w=90,h=80;
+  bCtx.fillStyle='#080a0c';bCtx.fillRect(0,0,w,h);
+  const cx=w/2,cy=h/2-2;
+  // Brain outline (two hemispheres)
+  bCtx.strokeStyle='#3edcd0';bCtx.lineWidth=1.2;bCtx.shadowColor='#3edcd0';bCtx.shadowBlur=4;
+  // Left hemisphere
+  bCtx.beginPath();
+  bCtx.ellipse(cx-8,cy,16,22,0,0,Math.PI*2);
+  bCtx.stroke();
+  // Right hemisphere
+  bCtx.beginPath();
+  bCtx.ellipse(cx+8,cy,16,22,0,0,Math.PI*2);
+  bCtx.stroke();
+  // Cerebellum
+  bCtx.beginPath();
+  bCtx.ellipse(cx,cy+18,10,7,0,0,Math.PI);
+  bCtx.stroke();
+  // Sulci (brain folds)
+  bCtx.strokeStyle='#3edcd066';bCtx.lineWidth=0.8;
+  [[cx-12,cy-10,cx-5,cy-15],[cx-15,cy,cx-6,cy-3],[cx-13,cy+8,cx-4,cy+6],
+   [cx+5,cy-15,cx+12,cy-10],[cx+6,cy-3,cx+15,cy],[cx+4,cy+6,cx+13,cy+8]].forEach(([x1,y1,x2,y2])=>{
+    bCtx.beginPath();bCtx.moveTo(x1,y1);
+    bCtx.quadraticCurveTo((x1+x2)/2+rand(-2,2),((y1+y2)/2)+rand(-3,3),x2,y2);
+    bCtx.stroke();
+  });
+  // Pulsing neural activity dots
+  bCtx.shadowBlur=0;
+  for(let i=0;i<12;i++){
+    const a=i/12*Math.PI*2+time/2000;
+    const r=12+Math.sin(i*2.3)*5;
+    const px=cx+Math.cos(a)*r*(i%2===0?-0.7:0.7);
+    const py=cy+Math.sin(a)*r*0.8;
+    const bright=0.3+Math.sin(time/300+i*1.5)*0.4;
+    bCtx.fillStyle=`rgba(62,220,208,${bright})`;
+    bCtx.beginPath();bCtx.arc(px,py,1.5,0,Math.PI*2);bCtx.fill();
+  }
+  bCtx.shadowBlur=0;
+  // Label
+  bCtx.fillStyle='#3edcd044';bCtx.font='7px Courier New';
+  bCtx.fillText('NEURAL MAP',cx-25,h-3);
+}
+
+// ===================== UPDATE STATS =====================
+function updateStats(){
+  $('cpuLoad').textContent=randInt(55,85)+'%';
+  $('gpuUtil').textContent=randInt(80,99)+'%';
+  $('vramUse').textContent=rand(6,10).toFixed(1)+' / 12 GB';
+  $('renderFps').textContent=rand(58,62).toFixed(1);
+  $('threadCount').textContent=randInt(14,16)+' / 16';
+  $('gpuTemp').textContent=randInt(68,82)+'°C';
+  $('gpuClock').textContent=randInt(1780,1890)+' MHz';
+  $('gpuPower').textContent=randInt(250,320)+'W';
+  $('gpuFan').textContent=randInt(55,80)+'%';
+  $('layerCt').textContent=randInt(18,32);
+  $('depthVal').textContent=pick(['256','512','1024']);
+  $('simBodies').textContent=randInt(900,1500).toLocaleString();
+  $('simWind').textContent=rand(1,8).toFixed(1)+' m/s';
+  $('frameNum').textContent=Math.floor(Date.now()/16.67)%100000;
+  $('netLatency').textContent=randInt(8,22)+'ms';
+  const phases=['DEEP REM','LIGHT REM','REM-3','ACTIVE REM'];
+  $('remPhase').textContent=pick(phases);
+  // Uptime
+  const s=Math.floor((Date.now()%86400000)/1000);
+  $('uptime').textContent=pad2(Math.floor(s/3600))+':'+pad2(Math.floor(s%3600/60))+':'+pad2(s%60);
+}
+setInterval(updateStats,2000);
+updateStats();
+
+// ===================== MAIN ANIMATION LOOP =====================
+function animate(time){
+  tickEeg();
+  drawAirplane(time);
+  drawMiniWave(mini1,m1,miniData1,'#3edcd0','bar');
+  drawMiniWave(mini2,m2,miniData2,'#2ecc71',1);
+  drawMiniWave(mini3,m3,miniData3,'#d08c3e',2);
+  drawRenderIcon(time);
+  drawBrain(time);
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
