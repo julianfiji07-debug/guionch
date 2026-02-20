@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOVIEDREAMS Lab Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000000;
+            color: #40e0d0;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 390px;
+            height: 100vh;
+            margin: 0 auto;
+            position: relative;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(10, 10, 10, 0.9);
+            border-bottom: 2px solid #40e0d0;
+            flex-shrink: 0;
+        }
+
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .logo {
+            font-size: 14px;
+            font-weight: bold;
+            color: #40e0d0;
+            text-shadow: 0 0 8px #40e0d0;
+        }
+
+        .corp {
+            font-size: 8px;
+            color: #ff8c00;
+            opacity: 0.9;
+        }
+
+        .preview-window {
+            width: 60px;
+            height: 60px;
+            background: #000;
+            border: 2px solid #40e0d0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 0 8px rgba(64, 224, 208, 0.3);
+            position: relative;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .preview-image.active {
+            opacity: 1;
+        }
+
+        .preview-label {
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 6px;
+            color: #ff8c00;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .patient-info {
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #40e0d0;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 9px;
+            text-align: center;
+        }
+
+        .patient-id {
+            color: #ff8c00;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .dream-theme {
+            color: #40e0d0;
+            font-size: 8px;
+        }
+
+        .monitors-container {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .health-monitor {
+            flex: 0 0 120px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #40e0d0;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .health-title {
+            color: #40e0d0;
+            font-size: 8px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 1px solid #40e0d0;
+            padding-bottom: 3px;
+        }
+
+        .vital-sign {
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .vital-label {
+            color: #40e0d0;
+            font-size: 7px;
+        }
+
+        .vital-value {
+            color: #ff8c00;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .vital-critical {
+            color: #ff4444;
+        }
+
+        .vital-warning {
+            color: #ffaa00;
+        }
+
+        .ecg-container {
+            height: 50px;
+            border: 1px solid #40e0d0;
+            background: rgba(0, 0, 0, 0.8);
+            margin: 5px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ecg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(64, 224, 208, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(64, 224, 208, 0.1) 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+
+        .ecg-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: transparent;
+        }
+
+        .ecg-wave {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #ff8c00;
+            transform: translateY(-50%);
+            animation: ecg-scroll 3s linear infinite;
+        }
+
+        @keyframes ecg-scroll {
+            0% { left: 100%; }
+            100% { left: -100%; }
+        }
+
+        .ecg-wave::before {
+            content: '';
+            position: absolute;
+            left: 20%;
+            top: -15px;
+            width: 0;
+            height: 0;
+            border-left: 2px solid transparent;
+            border-right: 2px solid transparent;
+            border-bottom: 30px solid #ff8c00;
+            animation: heartbeat-spike 3s linear infinite;
+        }
+
+        .ecg-wave::after {
+            content: '';
+            position: absolute;
+            left: 25%;
+            top: 15px;
+            width: 0;
+            height: 0;
+            border-left: 2px solid transparent;
+            border-right: 2px solid transparent;
+            border-top: 15px solid #ff8c00;
+        }
+
+        @keyframes heartbeat-spike {
+            0%, 19%, 21%, 100% { opacity: 0.3; }
+            20% { opacity: 1; }
+        }
+
+        .dream-generation {
+            flex: 1;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #40e0d0;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .generation-title {
+            color: #40e0d0;
+            font-size: 8px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 1px solid #40e0d0;
+            padding-bottom: 3px;
+        }
+
+        .dream-terminal {
+            flex: 1;
+            font-size: 8px;
+            line-height: 1.2;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .terminal-line {
+            margin-bottom: 1px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .terminal-line.fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 6px;
+            height: 10px;
+            background: #40e0d0;
+            animation: blink 1s infinite;
+            margin-left: 1px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .json-key {
+            color: #40e0d0;
+            font-weight: bold;
+        }
+
+        .json-string {
+            color: #40e0d0;
+        }
+
+        .json-number {
+            color: #ff8c00;
+        }
+
+        .json-boolean {
+            color: #ff8c00;
+        }
+
+        .json-null {
+            color: #666;
+        }
+
+        .job-id {
+            color: #ff8c00;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .status-processing {
+            color: #ffaa00;
+            font-weight: bold;
+        }
+
+        .scene-text {
+            color: #40e0d0;
+            font-style: italic;
+        }
+
+        .system-msg {
+            color: #ff8c00;
+            font-style: italic;
+        }
+
+        .data-stream {
+            color: #40e0d0;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">MOVIEDREAMS</div>
+                <div class="corp">LUCIDVISIONS</div>
+            </div>
+            <div class="preview-window">
+                <img id="previewImage" class="preview-image" src="" alt="Dream Preview">
+                <div class="preview-label" id="previewLabel">WESTERN</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="patient-info">
+                <div class="patient-id">SESIÓN: LV-2087 - WESTERN PROTOCOL</div>
+                <div class="dream-theme">ESTADO: REM PROFUNDO - Duración: 8.5 min</div>
+            </div>
+
+            <div class="monitors-container">
+                <div class="health-monitor">
+                    <div class="health-title">SIGNOS VITALES</div>
+                    
+                    <div class="vital-sign">
+                        <span class="vital-label">BPM:</span>
+                        <span class="vital-value" id="heartRate">72</span>
+                    </div>
+                    
+                    <div class="ecg-container">
+                        <div class="ecg-grid"></div>
+                        <div class="ecg-line">
+                            <div class="ecg-wave"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="vital-sign">
+                        <span class="vital-label">O2:</span>
+                        <span class="vital-value" id="oxygenSat">98%</span>
+                    </div>
+                    
+                    <div class="vital-sign">
+                        <span class="vital-label">TEMP:</span>
+                        <span class="vital-value" id="temperature">36.8°C</span>
+                    </div>
+                    
+                    <div class="vital-sign">
+                        <span class="vital-label">REM:</span>
+                        <span class="vital-value" id="remPhase">DEEP</span>
+                    </div>
+
+                    <div class="vital-sign">
+                        <span class="vital-label">LUC:</span>
+                        <span class="vital-value" id="lucidity">87%</span>
+                    </div>
+                </div>
+
+                <div class="dream-generation">
+                    <div class="generation-title">GENERACIÓN - WESTERN GANGS</div>
+                    <div class="dream-terminal" id="dreamTerminal"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const westernScenes = [
+            "Saloon polvoriento al atardecer - puertas batientes chirrían",
+            "Duelo a muerte en la calle principal - campanas suenan",
+            "Persecución a caballo por el desierto - polvo y balas",
+            "Asalto al banco - explosiones y gritos",
+            "Refugio en las montañas - hogueras y whisky",
+            "Confrontación final - dos pistoleros frente a frente",
+            "Funeral en el cementerio - viento y tumbas",
+            "Cantina llena de forajidos - poker y peleas",
+            "Tren atravesando el valle - humo negro",
+            "Sheriff caminando por el pueblo fantasma"
+        ];
+
+        let dreamTerminal = document.getElementById('dreamTerminal');
+        let previewImage = document.getElementById('previewImage');
+        let currentSceneIndex = 0;
+        let isGenerating = false;
+
+        // Health monitoring variables
+        let baseHeartRate = 72;
+        let currentHeartRate = 72;
+
+        function updateVitals() {
+            const variation = (Math.random() - 0.5) * 8;
+            currentHeartRate = Math.max(60, Math.min(90, baseHeartRate + variation));
+            document.getElementById('heartRate').textContent = Math.round(currentHeartRate);
+
+            const o2Sat = Math.max(95, Math.min(100, 98 + (Math.random() - 0.5) * 4));
+            document.getElementById('oxygenSat').textContent = Math.round(o2Sat) + '%';
+
+            const temp = (36.4 + (Math.random() - 0.5) * 0.8).toFixed(1);
+            document.getElementById('temperature').textContent = temp + '°C';
+
+            const remPhases = ['LIGHT', 'DEEP', 'REM', 'ACTIVE'];
+            const currentPhase = remPhases[Math.floor(Math.random() * remPhases.length)];
+            document.getElementById('remPhase').textContent = currentPhase;
+
+            const lucidity = Math.max(65, Math.min(98, 87 + (Math.random() - 0.5) * 25));
+            document.getElementById('lucidity').textContent = Math.round(lucidity) + '%';
+
+            if (currentPhase === 'ACTIVE' || currentPhase === 'REM') {
+                baseHeartRate = Math.min(85, baseHeartRate + 0.5);
+            } else {
+                baseHeartRate = Math.max(68, baseHeartRate - 0.3);
+            }
+        }
+
+        function addTerminalLine(text, className = '') {
+            const line = document.createElement('div');
+            line.className = 'terminal-line ' + className;
+            line.innerHTML = text;
+            dreamTerminal.appendChild(line);
+
+            // Remove old lines to prevent overflow
+            const lines = dreamTerminal.children;
+            if (lines.length > 30) {
+                const oldLine = lines[0];
+                oldLine.classList.add('fade-out');
+                setTimeout(() => {
+                    if (oldLine.parentNode) {
+                        oldLine.parentNode.removeChild(oldLine);
+                    }
+                }, 500);
+            }
+        }
+
+        async function generateWesternDream() {
+            if (isGenerating) return;
+            isGenerating = true;
+
+            const scene = westernScenes[currentSceneIndex];
+            currentSceneIndex = (currentSceneIndex + 1) % westernScenes.length;
+            
+            const jobId = 'w' + Math.random().toString(36).substr(2, 6);
+            const sceneId = Math.random().toString(36).substr(2, 4);
+
+            addTerminalLine(`<span class="system-msg">[SCENE ${String(currentSceneIndex).padStart(2, '0')}] Iniciando renderizado...</span>`);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            addTerminalLine('{');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            addTerminalLine(`  <span class="json-key">"scene_id"</span>: <span class="json-string job-id">"${sceneId}"</span>,`);
+            await new Promise(resolve => setTimeout(resolve, 120));
+            
+            addTerminalLine(`  <span class="json-key">"sequence"</span>: <span class="json-string scene-text">"${scene}"</span>,`);
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            const status = Math.random() > 0.6 ? 'completed' : 'processing';
+            addTerminalLine(`  <span class="json-key">"status"</span>: <span class="json-string status-${status}">"${status}"</span>,`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            if (status === 'completed') {
+                addTerminalLine(`  <span class="json-key">"layers"</span>: {`);
+                await new Promise(resolve => setTimeout(resolve, 80));
+                addTerminalLine(`    <span class="json-key">"dust"</span>: <span class="json-number">${Math.floor(Math.random() * 500 + 200)}</span>,`);
+                await new Promise(resolve => setTimeout(resolve, 80));
+                addTerminalLine(`    <span class="json-key">"lighting"</span>: <span class="json-string">"golden_hour"</span>,`);
+                await new Promise(resolve => setTimeout(resolve, 80));
+                addTerminalLine(`    <span class="json-key">"shadows"</span>: <span class="json-number">${Math.floor(Math.random() * 50 + 20)}</span>`);
+                await new Promise(resolve => setTimeout(resolve, 80));
+                addTerminalLine(`  },`);
+                await new Promise(resolve => setTimeout(resolve, 80));
+                addTerminalLine(`  <span class="json-key">"audio"</span>: [<span class="json-string">"wind"</span>, <span class="json-string">"hooves"</span>, <span class="json-string">"gunfire"</span>],`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                addTerminalLine(`  <span class="json-key">"duration"</span>: <span class="json-number">${(Math.random() * 20 + 10).toFixed(1)}s</span>`);
+            } else {
+                addTerminalLine(`  <span class="json-key">"progress"</span>: <span class="json-number">${Math.floor(Math.random() * 100)}%</span>,`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                addTerminalLine(`  <span class="json-key">"neural_load"</span>: <span class="json-number">${(Math.random() * 0.4 + 0.6).toFixed(2)}</span>`);
+            }
+            await new Promise(resolve => setTimeout(resolve, 80));
+            
+            addTerminalLine('}');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Add data stream lines
+            addTerminalLine(`<span class="data-stream">│ Frame ${Math.floor(Math.random() * 1000)} rendered │ Memory: ${(Math.random() * 2 + 1).toFixed(1)}GB │</span>`);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            addTerminalLine(`<span class="system-msg">[${status.toUpperCase()}] ${status === 'completed' ? 'Secuencia lista' : 'Procesando...'}</span>`);
+            await new Promise(resolve => setTimeout(resolve, 150));
+            addTerminalLine('');
+            
+            isGenerating = false;
+        }
+
+        function updatePreviewImage() {
+            const westernImages = [
+                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop",
+                "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=200&h=200&fit=crop",
+                "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop",
+                "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=200&h=200&fit=crop"
+            ];
+            
+            const imageIndex = Math.floor(Math.random() * westernImages.length);
+            const newImage = new Image();
+            newImage.onload = function() {
+                previewImage.classList.remove('active');
+                setTimeout(() => {
+                    previewImage.src = newImage.src;
+                    previewImage.classList.add('active');
+                }, 500);
+            };
+            newImage.src = westernImages[imageIndex];
+        }
+
+        function init() {
+            updatePreviewImage();
+            updateVitals();
+            
+            // Update vitals every 2 seconds
+            setInterval(updateVitals, 2000);
+            
+            // Update preview image every 8 seconds
+            setInterval(updatePreviewImage, 8000);
+            
+            // Start dream generation - much faster
+            setTimeout(() => {
+                generateWesternDream();
+                setInterval(() => {
+                    if (!isGenerating) {
+                        generateWesternDream();
+                    }
+                }, Math.random() * 2000 + 1500); // Faster generation
+            }, 1000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
